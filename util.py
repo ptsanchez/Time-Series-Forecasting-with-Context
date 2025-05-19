@@ -18,3 +18,10 @@ def plot_losses(train_losses, val_losses, fname):
     plt.title('Loss per Epoch')
 
     plt.savefig(fname + ".png")
+
+def create_sequence(data, window_size):
+    X, y = [], []
+    for i in range(len(data) - window_size):
+        X.append(data[i:i + window_size])
+        y.append(data[i + window_size])
+    return np.array(X), np.array(y)
