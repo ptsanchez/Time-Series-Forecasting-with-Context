@@ -1,0 +1,21 @@
+model: 'LSTM'
+
+lstm_hidden_size: 32
+
+lstm_num_layers: 3
+
+epochs: 30
+
+window_size: 10
+
+learning_rate: 5e-3
+
+weight_decay: 1e-4
+
+early_stop_epochs: 3
+
+patience: 3
+
+lr_scheduler: 'None'
+
+track_lstm_cell_states: True
