@@ -17,9 +17,7 @@ class LSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = x.unsqueeze(2)
-
         output, _ = self.lstm(x)
-        output = np.squeeze(self.fc(output[:, -1, :])) # Extract last time step output
+        output = self.fc(output[:, -1, :]) # Extract last time step output
 
         return output

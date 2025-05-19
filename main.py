@@ -4,7 +4,7 @@ import numpy as np
 from config import load_config
 from lstm import LSTM
 from util import *
-from train import *
+from train import train, eval
 from data_loader import *
 
 def main():
@@ -41,7 +41,7 @@ def main():
     
     avg_test_loss = eval(model=model,
                         device=device,
-                        test_dataloader=test_dataloader,
+                        val_dataloader=test_dataloader,
                         model_config=model_config,
                         eval_config=eval_config)
     print(f"Avg Test Loss: {avg_test_loss}")

@@ -1,5 +1,5 @@
 from util import *
-from torch.nn import nn
+import torch.nn as nn
 import torch
 import numpy as np
 import os
@@ -9,7 +9,7 @@ import shutil
 import csv
 
 def train(model, device, train_dataloader, val_dataloader, model_config, eval_config):
-    criteron = nn.MSELoss()
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config['learning_rate'], weight_decay=model_config['weight_decay'])
     
     unique_code_str = uuid.uuid4()
@@ -50,11 +50,11 @@ def train(model, device, train_dataloader, val_dataloader, model_config, eval_co
             optimizer.zero_grad()
             input, target = input.to(device), target.to(device)
             pred = model(input)
-            loss = criteron(pred, target)
+            loss = criterion(pred, target)
 
             # Append first train loss for plotting purposes
-            if (len(train_loss) == 0):
-                train_loss.append(loss.detatch().cpu().item())
+            #if (len(train_loss) == 0):
+            #    train_loss.append(loss.detach().cpu().item())
 
             epoch_train_loss.append(loss.detach().cpu().item())
 
@@ -84,6 +84,15 @@ def train(model, device, train_dataloader, val_dataloader, model_config, eval_co
         val_loss.append(avg_val_loss)
 
     save_train(train_loss, val_loss, model_folder, model_config, unique_code_str)
+
+def eval(model, device, val_dataloader, model_config, eval_config, criterion=nn.MSELoss()):
+    val_loss = []
+    for i, (input, target) in enumerate(val_dataloader):
+        input, target = input.to(device), target.to(device)
+        pred = model(input)
+        loss = criterion(pred, target)
+        val_loss.append(loss.detach().cpu().numpy())
+    return np.mean(val_loss), None
 
 def save_train(train_loss, val_loss, model_folder, model_config, unique_code_str):
     plot_losses(train_loss, val_loss, model_folder+f"loss_{model_config['model']}_seqlen{model_config['seq_len']}_{unique_code_str}")

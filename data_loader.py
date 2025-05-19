@@ -32,7 +32,7 @@ class FinDataLoader:
         X_test, y_test = X[train_size + val_size:], y[train_size + val_size:]
         return (X_train, X_val, X_test), (y_train, y_val, y_test)
     
-def create_dataloaders(self, model_config):
+def create_dataloaders(model_config):
     # Load the data
     (X_train, X_val, X_test), (y_train, y_val, y_test) = FinDataLoader.load_fin_data()
 

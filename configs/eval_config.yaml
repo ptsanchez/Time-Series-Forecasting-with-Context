@@ -1,0 +1,3 @@
+encoding_seq_length: 512
+
+decoding_seq_length: 512
