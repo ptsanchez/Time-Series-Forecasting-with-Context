@@ -4,7 +4,7 @@ import numpy as np
 from config import load_config
 from lstm import LSTM
 from util import *
-from train import train, eval
+from train import train, eval, generate_forecast_plot
 from data_loader import *
 
 def main():
@@ -16,7 +16,7 @@ def main():
 
     print("LOADED CONFIGS")
 
-    train_dataloader, val_dataloader, test_dataloader = create_dataloaders(model_config)
+    train_dataloader, val_dataloader, test_dataloader, scaler = create_dataloaders(model_config)
 
     (input, target) = train_dataloader.dataset[0]
     print(f"Example Input Shape: {input.shape}")
@@ -45,6 +45,16 @@ def main():
                         model_config=model_config,
                         eval_config=eval_config)
     print(f"Avg Test Loss: {avg_test_loss}")
+
+    generate_forecast_plot(model=model,
+                           test_dataloader=test_dataloader,
+                           device=device,
+                           scaler=scaler,
+                           save_path=f"plots/forecast_LSTM_seqlen{model_config['seq_len']}")
+    
+   
+    
+
 
 if __name__ == "__main__":
     main()

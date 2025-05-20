@@ -30,11 +30,11 @@ class FinDataLoader:
         X_train, y_train = X[:train_size], y[:train_size]
         X_val, y_val = X[train_size:train_size + val_size], y[train_size:train_size + val_size]
         X_test, y_test = X[train_size + val_size:], y[train_size + val_size:]
-        return (X_train, X_val, X_test), (y_train, y_val, y_test)
+        return (X_train, X_val, X_test), (y_train, y_val, y_test), scaler
     
 def create_dataloaders(model_config):
     # Load the data
-    (X_train, X_val, X_test), (y_train, y_val, y_test) = FinDataLoader.load_fin_data()
+    (X_train, X_val, X_test), (y_train, y_val, y_test), scaler = FinDataLoader.load_fin_data(model_config['window_size'])
 
     # Create DataLoader objects
     train_loader = DataLoader(StockDataset(X_train, y_train), batch_size=model_config['batch_size'], shuffle=True)
@@ -42,7 +42,7 @@ def create_dataloaders(model_config):
     test_loader = DataLoader(StockDataset(X_test, y_test), batch_size=model_config['batch_size'])
 
     print("Data preprocessed and loaded.")
-    return train_loader, val_loader, test_loader
+    return train_loader, val_loader, test_loader, scaler
 
 class StockDataset(Dataset):
     def __init__(self, X, y):

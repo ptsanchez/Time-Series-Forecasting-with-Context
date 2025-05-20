@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import os
 
@@ -17,6 +18,19 @@ def plot_losses(train_losses, val_losses, fname):
     plt.ylabel('Loss')
     plt.title('Loss per Epoch')
 
+    plt.savefig(fname + ".png")
+
+def plot_predictions(predictions, targets, fname):
+    if not os.path.isdir('plots'):
+        os.mkdir('plots')
+    plt.close('all')
+
+    plt.plot(predictions, label='Predictions', color='blue')
+    plt.plot(targets, label='Targets', color='orange')
+    plt.xlabel('Time Step')
+    plt.ylabel('Return')
+    plt.title('Predictions vs Targets')
+    plt.legend()
     plt.savefig(fname + ".png")
 
 def create_sequence(data, window_size):

@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 import numpy as np
 import os
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 import uuid 
 import shutil
@@ -10,7 +11,7 @@ import csv
 
 def train(model, device, train_dataloader, val_dataloader, model_config, eval_config):
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=model_config['learning_rate'], weight_decay=model_config['weight_decay'])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=model_config['learning_rate'], weight_decay=model_config['weight_decay'])
     
     unique_code_str = uuid.uuid4()
 
@@ -45,25 +46,21 @@ def train(model, device, train_dataloader, val_dataloader, model_config, eval_co
         lowest_epoch_avg_loss = float('inf')
 
         current_lr = optimizer.param_groups[0]['lr']
-        print(f"Epoch {t}: lr = {current_lr}")
+        #print(f"Epoch {t}: lr = {current_lr}")
         for i, (input, target) in enumerate(train_dataloader):
             optimizer.zero_grad()
             input, target = input.to(device), target.to(device)
             pred = model(input)
             loss = criterion(pred, target)
 
-            # Append first train loss for plotting purposes
-            #if (len(train_loss) == 0):
-            #    train_loss.append(loss.detach().cpu().item())
-
             epoch_train_loss.append(loss.detach().cpu().item())
 
-            if i % 100 == 0:
-                if lowest_epoch_avg_loss > np.mean(epoch_train_loss):
-                    print(f"\033[91mEpoch {t}, Batch {i}: Loss: {np.mean(epoch_train_loss)}\033[0m")
-                else:
-                    print(f"\033[92mEpoch {t}, Batch {i}: Loss: {np.mean(epoch_train_loss)}\033[0m")
-                    lowest_epoch_avg_loss = np.mean(epoch_train_loss)
+            #if i % 100 == 0:
+            #    if lowest_epoch_avg_loss > np.mean(epoch_train_loss):
+            #        print(f"\033[91mEpoch {t}, Batch {i}: Loss: {np.mean(epoch_train_loss)}\033[0m")
+            #    else:
+            #        print(f"\033[92mEpoch {t}, Batch {i}: Loss: {np.mean(epoch_train_loss)}\033[0m")
+            #        lowest_epoch_avg_loss = np.mean(epoch_train_loss)
             
             loss.backward()
             optimizer.step()
@@ -78,7 +75,7 @@ def train(model, device, train_dataloader, val_dataloader, model_config, eval_co
         if early_stopper.early_stop(avg_val_loss, t):
             save_train(train_loss, val_loss, model_folder, model_config, unique_code_str)
 
-        print(f"Epoch {t}: Avg Training Loss: {avg_train_loss}, Avg Validation Loss: {avg_val_loss}")
+        #print(f"Epoch {t}: Avg Training Loss: {avg_train_loss}, Avg Validation Loss: {avg_val_loss}")
 
         train_loss.append(avg_train_loss)
         val_loss.append(avg_val_loss)
@@ -102,8 +99,29 @@ def save_train(train_loss, val_loss, model_folder, model_config, unique_code_str
         writer.writerow(["epoch", "val_loss", "validation_loss"])
         for epoch_idx in range(len(train_loss)):
             writer.writerow([epoch_idx, train_loss[epoch_idx], val_loss[epoch_idx]])
-    print("CSV file saved")
+    #print("CSV file saved")
 
+def generate_forecast_plot(model, test_dataloader, device, scaler, save_path="plots/forecast"):
+    model.eval()
+    preds, targets = [], []
+
+    with torch.no_grad():
+        for input, target in test_dataloader:
+            input = input.to(device)
+            pred = model(input)
+            preds.extend(pred.squeeze(1).cpu().numpy())
+            targets.extend(target.squeeze(1).cpu().numpy())
+
+    preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).flatten()
+    targets = scaler.inverse_transform(np.array(targets).reshape(-1, 1)).flatten()
+
+    mse = mean_squared_error(targets, preds)
+    rmse = np.sqrt(mse)
+    mae = mean_absolute_error(targets, preds)
+    r2 = r2_score(targets, preds)
+
+    print(f"RMSE: {rmse}, MAE: {mae}, R2: {r2}")
+    plot_predictions(preds, targets, save_path)
 
 class EarlyStopper():
     def __init__(self, patience, early_stop_epochs):
@@ -119,6 +137,6 @@ class EarlyStopper():
         elif epoch >= self.early_stop_epochs:
             self.increasing_loss_count += 1
             if self.increasing_loss_count >= self.patience:
-                print(f"Early stopping at epoch {epoch}")
+                #print(f"Early stopping at epoch {epoch}")
                 return True
         return False
